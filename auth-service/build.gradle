@@ -1,0 +1,8 @@
+plugins {
+    id 'java'
+}
+
+dependencies {
+    implementation 'org.keycloak:keycloak-admin-client:22.0.1'
+}
+
