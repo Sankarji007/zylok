@@ -4,11 +4,13 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 
-@Getter
 @Setter
+@Getter
 @ToString
-public class LoginDto {
+public class InviteUserRequest {
     private String username;
+    private String email;
+    private String firstName;
+    private String lastName;
     private String password;
-    private String organization;
 }

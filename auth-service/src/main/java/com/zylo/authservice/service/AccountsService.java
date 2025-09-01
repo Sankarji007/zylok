@@ -1,7 +1,9 @@
 package com.zylo.authservice.service;
 
 import com.zylo.authservice.component.AccountComponent;
+import com.zylo.authservice.dto.InviteUserRequest;
 import com.zylo.authservice.dto.UserRegistrationRequest;
+import com.zylo.authservice.exception.InsufficientInfoException;
 import jakarta.ws.rs.core.Response;
 import org.keycloak.admin.client.Keycloak;
 import org.keycloak.admin.client.resource.RealmResource;
@@ -31,10 +33,7 @@ public class AccountsService {
         Keycloak keycloak = accountComponent.getKeycloak();
         RealmResource realmResource = keycloak.realm(accountComponent.getRealm());
         if (request.getOrganization() == null || request.getOrganization().isEmpty()) {
-            throw new RuntimeException("Organization name is required for admin registration");
-        }
-        if (request.getInvitedBy() != null) {
-            throw new RuntimeException("InvitedBy field is not allowed for admin registration");
+            throw new InsufficientInfoException("Organization field is required for admin registration");
         }
         String groupId = createGroup(realmResource, request.getOrganization());
         UserRepresentation user = getAdminUserRepresentation(request, "T_ADMIN");
@@ -53,25 +52,23 @@ public class AccountsService {
         group.setName(orgName);
         Response groupResponse = realmResource.groups().add(group);
         if (groupResponse.getStatus() != 201) {
-            throw new RuntimeException("Failed to account");
+            throw new RuntimeException("Failed to create tenant");
         }
         return groupResponse.getLocation().getPath().replaceAll(".*/([^/]+)$", "$1");
     }
 
-    public void registerInvitedUser(UserRegistrationRequest request) {
+    public void registerInvitedUser(InviteUserRequest request) {
         String orgName = getOrgName();
-        String email = ((Jwt) SecurityContextHolder.getContext().getAuthentication().getPrincipal()).getClaims().get("preferred_username").toString();
-        request.setInvitedBy(email);
-        request.setOrganization(orgName);
+        String username = getPreferredUsername();
         Keycloak keycloak = accountComponent.getKeycloak();
         String realm = accountComponent.getRealm();
         RealmResource realmResource = keycloak.realm(realm);
 
         String groupId = null;
-        if (request.getInvitedBy() != null && !request.getInvitedBy().isEmpty()) {
-            groupId = getGroupId(request, realmResource);
-        } else if (request.getOrganization() != null && !request.getOrganization().isEmpty()) {
-            groupId = getGroupIdByOrg(request, realmResource);
+        if (username != null && !username.isEmpty()) {
+            groupId = getGroupId(username, realmResource);
+        } else if (orgName != null && !orgName.isEmpty()) {
+            groupId = getGroupIdByOrg(orgName, realmResource);
         } else {
             throw new RuntimeException("Either invitedBy or organization must be provided");
         }
@@ -93,24 +90,28 @@ public class AccountsService {
 
     }
 
-    private static String getGroupIdByOrg(UserRegistrationRequest request, RealmResource realmResource) {
+    private static String getPreferredUsername() {
+        return ((Jwt) SecurityContextHolder.getContext().getAuthentication().getPrincipal()).getClaims().get("preferred_username").toString();
+    }
+
+    private static String getGroupIdByOrg(String orgName, RealmResource realmResource) {
         String groupId;
-        groupId = realmResource.groups().groups().stream().filter(group -> group.getName().equals(request.getOrganization())).map(GroupRepresentation::getId).findFirst().orElse(null);
+        groupId = realmResource.groups().groups().stream().filter(group -> group.getName().equals(orgName)).map(GroupRepresentation::getId).findFirst().orElse(null);
         if (groupId == null) {
-            throw new RuntimeException("Group for organization " + request.getOrganization() + " not found");
+            throw new RuntimeException("Group for organization " + orgName + " not found");
         }
         return groupId;
     }
 
-    private static String getGroupId(UserRegistrationRequest request, RealmResource realmResource) {
+    private static String getGroupId(String userName, RealmResource realmResource) {
         String groupId;
-        UserRepresentation inviter = realmResource.users().search(request.getInvitedBy()).stream().filter(u -> u.getUsername().equals(request.getInvitedBy())).findFirst().orElse(null);
+        UserRepresentation inviter = realmResource.users().search(userName).stream().filter(u -> u.getUsername().equals(userName)).findFirst().orElse(null);
         if (inviter == null) {
-            throw new RuntimeException("Inviter user not found: " + request.getInvitedBy());
+            throw new InsufficientInfoException("Inviter user not found: " + userName);
         }
         groupId = realmResource.users().get(inviter.getId()).groups().stream().map(GroupRepresentation::getId).findFirst().orElse(null);
         if (groupId == null) {
-            throw new RuntimeException("No organization group found for inviter: " + request.getInvitedBy());
+            throw new InsufficientInfoException("No organization group found for inviter: " + userName);
         }
         return groupId;
     }
@@ -119,7 +120,7 @@ public class AccountsService {
         return ((ArrayList) ((Jwt) SecurityContextHolder.getContext().getAuthentication().getPrincipal()).getClaims().get("groups")).get(0).toString().split("/")[1];
     }
 
-    private static CredentialRepresentation getCredentialRepresentation(UserRegistrationRequest request) {
+    private static CredentialRepresentation getCredentialRepresentation(InviteUserRequest request) {
         CredentialRepresentation passwordCred = new CredentialRepresentation();
         passwordCred.setType(CredentialRepresentation.PASSWORD);
         passwordCred.setValue(request.getPassword());
@@ -127,7 +128,7 @@ public class AccountsService {
         return passwordCred;
     }
 
-    private static UserRepresentation getAdminUserRepresentation(UserRegistrationRequest request, String role) {
+    private static UserRepresentation getAdminUserRepresentation(InviteUserRequest request, String role) {
         UserRepresentation user = new UserRepresentation();
         user.setUsername(request.getUsername());
         user.setEmail(request.getEmail());

@@ -9,14 +9,17 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.AuthenticationFilter;
 
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity
 public class SecurityConfig {
 
+
     @Autowired
-    private TenantFilter tenantFilter;
+    TenantFilter tenantFilter;
+
     @Autowired
     JwtAuthConverter authConverter;
 
@@ -27,6 +30,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/v1/accounts/register").permitAll() // Public endpoint
                         .anyRequest().authenticated() // All other endpoints require authentication
                 )
+                .addFilterAfter(tenantFilter, AuthenticationFilter.class)
                 .csrf(AbstractHttpConfigurer::disable) // Disable CSRF for stateless APIs
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS) // No sessions

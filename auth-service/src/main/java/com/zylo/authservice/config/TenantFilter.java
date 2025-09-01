@@ -1,64 +1,64 @@
 package com.zylo.authservice.config;
 
+import com.zylo.authservice.repository.AccountsRepository;
 import jakarta.persistence.EntityManager;
-import jakarta.persistence.PersistenceContext;
-import jakarta.servlet.Filter;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
-import jakarta.servlet.ServletRequest;
-import jakarta.servlet.ServletResponse;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import org.hibernate.Filter;
 import org.hibernate.Session;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Component;
+import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.UUID;
 
 @Component
-public class TenantFilter implements Filter {
+public class TenantFilter extends OncePerRequestFilter {
+
     @Autowired
-    private RedisTemplate<String, Object> redisTemplate;
+    EntityManager entityManager;
 
-    @PersistenceContext
-    private EntityManager entityManager;
+    @Autowired
+    AccountsRepository accountsRepository;
 
-    private static final String TENANTS_KEY = "tenants";
+    @Autowired
+    RedisTemplate<String,String> redisTemplate;
+
 
     @Override
-    public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
-            throws IOException, ServletException {
-        HttpServletRequest httpRequest = (HttpServletRequest) request;
-        String tenantIdHeader = httpRequest.getHeader("Tenant-Id");
-
-        try {
-            if (tenantIdHeader != null && !tenantIdHeader.isEmpty()) {
-                try {
-                    UUID tenantId = UUID.fromString(tenantIdHeader);
-                    Boolean tenantExists = redisTemplate.opsForSet().isMember(TENANTS_KEY, tenantId.toString());
-
-                    if (Boolean.TRUE.equals(tenantExists)) {
-                        TenantContext.setTenantId(tenantId);
-
-                        Session session = entityManager.unwrap(Session.class);
-                        session.enableFilter("tenantFilter").setParameter("tenantId", tenantId);
-                    } else {
-                        TenantContext.setTenantId(null); // Ensure null for new tenant creation
-                    }
-                } catch (IllegalArgumentException e) {
-                    throw new ServletException("Invalid Tenant-Id format", e);
-                }
-            } else {
-                TenantContext.setTenantId(null);
-            }
-            chain.doFilter(request, response);
-        } finally {
-            if (TenantContext.getTenantId() != null) {
-                Session session = entityManager.unwrap(Session.class);
-                session.disableFilter("tenantFilter");
-            }
-            TenantContext.clear();
+    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if(authentication.getPrincipal().equals("anonymousUser")) {
+            filterChain.doFilter(request, response);
+            return;
         }
+        Jwt principal = (Jwt) authentication.getPrincipal();
+        ArrayList<Object> groups = (ArrayList<Object>) principal.getClaims().get("groups");
+        String name = groups.get(0).toString().split("/")[1];
+        String tenantUUID = redisTemplate.opsForValue().get("tenant:" + name);
+        if(tenantUUID == null) {
+            tenantUUID = accountsRepository.getTenantIdByName(name);
+            if(tenantUUID == null) {
+                filterChain.doFilter(request,response);
+                return;
+            }
+            redisTemplate.opsForValue().set("tenant:" + name, tenantUUID);
+        }
+        UUID tenantId = UUID.fromString(tenantUUID);
+        TenantContext.setTenantId(tenantId);
+        Session unwrap = entityManager.unwrap(Session.class);
+        Filter tenantFilter = unwrap.enableFilter("tenantFilter");
+        tenantFilter.setParameter("tenantId", TenantContext.getTenantId());
+        filterChain.doFilter(request,response);
+        TenantContext.clear();
+        unwrap.disableFilter("tenantFilter");
     }
 }

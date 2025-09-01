@@ -9,6 +9,7 @@ import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Root;
 import jakarta.transaction.Transactional;
+import org.hibernate.Filter;
 import org.hibernate.Session;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -20,6 +21,10 @@ import java.util.UUID;
 @Repository
 public class AccountsRepository {
 
+    public AccountsRepository(){
+
+    }
+
     @PersistenceContext
     private EntityManager entityManager;
 
@@ -30,7 +35,7 @@ public class AccountsRepository {
     private static final String USERNAME_KEY_PREFIX = "tenant:%s:usernames";
     private static final String EMAIL_KEY_PREFIX = "tenant:%s:emails";
 
-    public void createUser(User user) {
+    public User createUser(User user) {
         UUID tenantId = TenantContext.getTenantId();
         CriteriaBuilder criteriaBuilder = entityManager.getCriteriaBuilder();
         Tenant tenant = user.getTenant();
@@ -95,15 +100,32 @@ public class AccountsRepository {
         entityManager.persist(user);
         redisTemplate.opsForSet().add(usernameKey, user.getUsername());
         redisTemplate.opsForSet().add(emailKey, user.getEmail());
+        return user;
     }
 
-    public Tenant getTenantByUser( String invitedBy) {
+    public Tenant getTenantById( UUID name) {
+        CriteriaQuery<Tenant> query = this.entityManager.getCriteriaBuilder().createQuery(Tenant.class);
+        Root<Tenant> userRoot = query.from(Tenant.class);
+        CriteriaBuilder cb = this.entityManager.getCriteriaBuilder();
+        query.where(cb.equal(userRoot.get("id"), name));
+        return entityManager.createQuery(query).getSingleResult();
+    }
+
+    public User getUserById(String id) {
         CriteriaQuery<User> query = this.entityManager.getCriteriaBuilder().createQuery(User.class);
         Root<User> userRoot = query.from(User.class);
-        query.where(this.entityManager.getCriteriaBuilder().equal(userRoot.get("username"), invitedBy));
-        User inviter = entityManager.createQuery(query).getSingleResult();
-        Tenant tenant = inviter.getTenant();
-        return tenant;
+        CriteriaBuilder cb = this.entityManager.getCriteriaBuilder();
+        query.where(cb.equal(userRoot.get("id"), UUID.fromString(id)));
+        User user = entityManager.createQuery(query).getSingleResult();
+        return user;
+    }
 
+    public String getTenantIdByName(String name) {
+        CriteriaQuery<Tenant> query = this.entityManager.getCriteriaBuilder().createQuery(Tenant.class);
+        Root<Tenant> tenantRoot = query.from(Tenant.class);
+        CriteriaBuilder cb = this.entityManager.getCriteriaBuilder();
+        query.where(cb.equal(cb.lower(tenantRoot.get("name")), name.toLowerCase()));
+        Tenant tenant = entityManager.createQuery(query).getSingleResult();
+        return tenant != null ? tenant.getId().toString() : null;
     }
 }
