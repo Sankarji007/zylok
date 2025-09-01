@@ -1,0 +1,123 @@
+erDiagram
+
+    TENANTS ||--o{ USERS : "has"
+    TENANTS ||--o{ CHANNELS : "has"
+    USERS }o--o{ CHANNELS : "participates in"
+    USERS ||--o{ CHANNELS : "created_by"
+    USERS ||--o{ CHANNELS : "administers"
+    CHANNELS ||--o{ THREADS : "contains"
+    USERS ||--o{ THREADS : "created_by"
+    MESSAGES ||--o{ THREADS : "starts"
+    THREADS ||--o{ MESSAGES : "contains"
+    USERS ||--o{ MESSAGES : "sends"
+    CHANNELS ||--o{ CHANNEL_MEMBERS : "has_members"
+    USERS ||--o{ CHANNEL_MEMBERS : "is_member"
+    MESSAGES ||--o{ MESSAGES : "replies_to"
+    MESSAGES ||--o{ REACTIONS : "has"
+    USERS ||--o{ REACTIONS : "adds"
+    MESSAGES ||--o{ NOTIFICATIONS : "triggers"
+    USERS ||--o{ NOTIFICATIONS : "receives"
+    MESSAGES ||--o{ ATTACHMENTS : "includes"
+
+    TENANTS {
+        int id PK
+        string name UK
+        timestamp created_at
+        timestamp updated_at
+        timestamp deleted_at
+    }
+
+    USERS {
+        int id PK
+        int tenant_id FK
+        string username
+        string email UK
+        string full_name
+        string avatar_url
+        string status
+        string role
+        timestamp created_at
+        timestamp updated_at
+        timestamp deleted_at
+    }
+
+    CHANNELS {
+        int id PK
+        int tenant_id FK
+        int admin_id FK
+        string name
+        string type
+        string description
+        int created_by FK
+        boolean is_archived
+        timestamp created_at
+        timestamp updated_at
+        timestamp deleted_at
+    }
+
+    CHANNEL_MEMBERS {
+        int channel_id PK, FK
+        int user_id PK, FK
+        string role
+        timestamp joined_at
+        timestamp updated_at
+    }
+
+    THREADS {
+        int id PK
+        int channel_id FK
+        int tenant_id FK
+        int created_by FK
+        int root_message_id FK
+        timestamp created_at
+        timestamp updated_at
+        timestamp deleted_at
+    }
+
+    MESSAGES {
+        int id PK
+        int channel_id FK
+        int thread_id FK
+        int user_id FK
+        int tenant_id FK
+        int parent_id FK
+        text content
+        string type
+        timestamp created_at
+        timestamp updated_at
+        timestamp edited_at
+        timestamp deleted_at
+    }
+
+    REACTIONS {
+        int id PK
+        int message_id FK
+        int user_id FK
+        int tenant_id FK
+        string emoji
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    NOTIFICATIONS {
+        int id PK
+        int user_id FK
+        int message_id FK
+        int tenant_id FK
+        string type
+        boolean is_read
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    ATTACHMENTS {
+        int id PK
+        int message_id FK
+        int tenant_id FK
+        string file_name
+        string file_type
+        bigint file_size
+        text url
+        timestamp uploaded_at
+        timestamp updated_at
+    }

@@ -2,3 +2,8 @@ plugins {
     id 'java'
 }
 
+dependencies {
+    implementation project(":auth-service")
+    implementation project(':common')
+    implementation project(':chat-service')
+}

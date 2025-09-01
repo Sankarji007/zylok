@@ -2,7 +2,6 @@ rootProject.name = "zylo"
 
 include("common")
 include("auth-service")
-include("tenant-service")
 include("chat-service")
 include("notification-service")
 include("presence-service")

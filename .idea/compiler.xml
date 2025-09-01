@@ -14,7 +14,6 @@
         <module name="zylo.api-gateway.main" />
         <module name="zylo.chat-service.main" />
         <module name="zylo.notification-service.main" />
-        <module name="zylo.tenant-service.main" />
       </profile>
     </annotationProcessing>
     <bytecodeTargetLevel target="17" />
