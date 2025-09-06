@@ -2,25 +2,71 @@ version: '3.8'
 services:
   keycloak:
     image: quay.io/keycloak/keycloak:24.0.3
+    container_name: keycloak
     environment:
-      KEYCLOAK_ADMIN: admin
-      KEYCLOAK_ADMIN_PASSWORD: admin
-      KC_DB: postgres
-      KC_DB_URL_HOST: host.containers.internal
-      KC_DB_URL_PORT: 5432
-      KC_DB_URL_DATABASE: keycloak
-      KC_DB_USERNAME: keycloak
-      KC_DB_PASSWORD: Test@213
+      - KEYCLOAK_ADMIN=admin
+      - KEYCLOAK_ADMIN_PASSWORD=admin
+      - KC_DB=postgres
+      - KC_DB_URL=jdbc:postgresql://postgres:5432/keycloak
+      - KC_DB_USERNAME=keycloak
+      - KC_DB_PASSWORD=Test@213
+      - KC_HOSTNAME=localhost
+      - KC_HTTP_ENABLED=true
+      - KC_HOSTNAME_STRICT=false
+      - KC_HOSTNAME_STRICT_HTTPS=false
+      - KC_LOG_LEVEL=debug # Debug logging for troubleshooting
+      - KC_EMAIL_HOST=mailhog # SMTP host set to MailHog service
+      - KC_EMAIL_PORT=1025
+      - KC_EMAIL_FROM=keycloak@example.com
+      - KC_EMAIL_FROM_DISPLAY_NAME=Keycloak
+      - KC_SPI_EMAIL_TEMPLATE_CACHE=false # Disable email template caching
     ports:
       - "8080:8080"
     command: start-dev
+    depends_on:
+      - postgres
+      - mailhog
+    networks:
+      app-network:
+    restart: unless-stopped
 
-#  rabbitmq:
-#    image: rabbitmq:3-management
-#    ports:
-#      - "5672:5672"
-#      - "15672:15672"
-#    environment:
-#      RABBITMQ_DEFAULT_USER: guest
-#      RABBITMQ_DEFAULT_PASS: guest
+  mailhog:
+    image: mailhog/mailhog:latest
+    container_name: mailhog
+    ports:
+      - "1025:1025" # SMTP port
+      - "8025:8025" # Web UI port
+    environment:
+      - MH_STORAGE=maildir # Persist emails
+    volumes:
+      - mailhog-data:/maildir
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    networks:
+      app-network:
+    restart: unless-stopped
 
+  postgres:
+    image: postgres:16
+    container_name: postgres
+    environment:
+      - POSTGRES_DB=keycloak
+      - POSTGRES_USER=keycloak
+      - POSTGRES_PASSWORD=Test@213
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      app-network:
+    restart: unless-stopped
+
+volumes:
+  mailhog-data:
+  postgres-data:
+
+networks:
+  app-network:
+    name: app-network
+    driver: bridge

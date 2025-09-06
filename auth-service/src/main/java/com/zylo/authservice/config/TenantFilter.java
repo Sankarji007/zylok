@@ -36,6 +36,10 @@ public class TenantFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if(authentication==null) {
+            filterChain.doFilter(request, response);
+            return;
+        }
         if(authentication.getPrincipal().equals("anonymousUser")) {
             filterChain.doFilter(request, response);
             return;

@@ -40,20 +40,20 @@ spring:
 keycloak:
   server-url: http://localhost:8080
   realm: master
-  admin-username: admin
-  admin-password: admin
+  admin-username: sankar@gmail.com
+  admin-password: mni8gthu9XretHJb2YS4RUQpayF6098p
   admin-client-id: zylo-web
 
 server:
   port: 8081
 
-debug: true
-logging:
-  level:
-    root: DEBUG
-    org.springframework: DEBUG
-    org.springframework.web: DEBUG
-    org.springframework.security: DEBUG
-    com.zylo.authservice: DEBUG
-    org.keycloak: DEBUG
-    org.springframework.web.filter.CommonsRequestLoggingFilter: DEBUG
+#debug: true
+#logging:
+#  level:
+#    root: DEBUG
+#    org.springframework: DEBUG
+#    org.springframework.web: DEBUG
+#    org.springframework.security: DEBUG
+#    com.zylo.authservice: DEBUG
+#    org.keycloak: DEBUG
+#    org.springframework.web.filter.CommonsRequestLoggingFilter: DEBUG

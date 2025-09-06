@@ -45,6 +45,7 @@ public class AccountsService {
         }
         String userId = response.getLocation().getPath().replaceAll(".*/([^/]+)$", "$1");
         realmResource.users().get(userId).joinGroup(groupId);
+        realmResource.users().get(userId).sendVerifyEmail();
     }
 
     private static String createGroup(RealmResource realmResource, String orgName) {
@@ -85,9 +86,7 @@ public class AccountsService {
 
         String userId = response.getLocation().getPath().replaceAll(".*/([^/]+)$", "$1");
         realmResource.users().get(userId).joinGroup(groupId);
-
-
-
+        realmResource.users().get(userId).sendVerifyEmail();
     }
 
     private static String getPreferredUsername() {
