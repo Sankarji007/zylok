@@ -1,9 +1,16 @@
-plugins {
-    id 'java'
-}
+// Chat service module - handles WebSocket chat functionality
 
 dependencies {
+    // Inter-module dependencies
+    api project(':common')
     implementation project(':auth-service')
-    implementation project(':common')
+    
+    // WebSocket and messaging
+    api 'org.springframework.boot:spring-boot-starter-websocket'
+    api 'org.springframework.boot:spring-boot-starter-amqp'
+    api 'org.springframework.boot:spring-boot-starter-data-redis'
+    
+    // JSON processing
+    implementation 'com.fasterxml.jackson.core:jackson-databind'
 }
 

@@ -45,4 +45,5 @@ public class Message extends BaseEntity {
 
     @Column(name = "edited_at")
     private LocalDateTime editedAt;
+
 }

@@ -1,4 +1,17 @@
 spring:
+  rabbitmq:
+    host: localhost
+    port: 5672
+    username: admin
+    password: admin
+    virtual-host: /
+    listener:
+      simple:
+        concurrency: 3
+        max-concurrency: 10
+        acknowledge-mode: auto
+    template:
+      mandatory: true
   datasource:
     url: jdbc:postgresql://localhost:5432/postgres
     username: postgres
@@ -41,19 +54,21 @@ keycloak:
   server-url: http://localhost:8080
   realm: master
   admin-username: sankar@gmail.com
-  admin-password: mni8gthu9XretHJb2YS4RUQpayF6098p
+  admin-password: admin
   admin-client-id: zylo-web
 
 server:
   port: 8081
+  servlet:
+    context-path: /
 
-#debug: true
-#logging:
-#  level:
-#    root: DEBUG
-#    org.springframework: DEBUG
-#    org.springframework.web: DEBUG
-#    org.springframework.security: DEBUG
-#    com.zylo.authservice: DEBUG
-#    org.keycloak: DEBUG
-#    org.springframework.web.filter.CommonsRequestLoggingFilter: DEBUG
+debug: true
+logging:
+  level:
+    root: DEBUG
+    org.springframework: DEBUG
+    org.springframework.web: DEBUG
+    org.springframework.security: DEBUG
+    com.zylo.authservice: DEBUG
+    org.keycloak: DEBUG
+    org.springframework.web.filter.CommonsRequestLoggingFilter: DEBUG

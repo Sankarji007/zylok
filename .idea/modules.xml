@@ -6,7 +6,6 @@
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/chat-service/zylo.chat-service.main.iml" filepath="$PROJECT_DIR$/.idea/modules/chat-service/zylo.chat-service.main.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/common/zylo.common.main.iml" filepath="$PROJECT_DIR$/.idea/modules/common/zylo.common.main.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/zylo.main.iml" filepath="$PROJECT_DIR$/.idea/modules/zylo.main.iml" />
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/notification-service/zylo.notification-service.main.iml" filepath="$PROJECT_DIR$/.idea/modules/notification-service/zylo.notification-service.main.iml" />
     </modules>
   </component>
 </project>

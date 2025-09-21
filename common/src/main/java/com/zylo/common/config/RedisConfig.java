@@ -1,4 +1,4 @@
-package com.zylo.authservice.config;
+package com.zylo.common.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

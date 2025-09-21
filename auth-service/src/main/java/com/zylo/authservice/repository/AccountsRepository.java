@@ -1,6 +1,7 @@
 package com.zylo.authservice.repository;
 
 import com.zylo.authservice.config.TenantContext;
+import com.zylo.authservice.dto.UserCreationResponse;
 import com.zylo.authservice.entity.Tenant;
 import com.zylo.authservice.entity.User;
 import jakarta.persistence.EntityManager;
@@ -9,19 +10,21 @@ import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Root;
 import jakarta.transaction.Transactional;
-import org.hibernate.Filter;
 import org.hibernate.Session;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.UUID;
 
 @Transactional
 @Repository
 public class AccountsRepository {
 
-    public AccountsRepository(){
+    public AccountsRepository() {
 
     }
 
@@ -103,7 +106,7 @@ public class AccountsRepository {
         return user;
     }
 
-    public Tenant getTenantById( UUID name) {
+    public Tenant getTenantById(UUID name) {
         CriteriaQuery<Tenant> query = this.entityManager.getCriteriaBuilder().createQuery(Tenant.class);
         Root<Tenant> userRoot = query.from(Tenant.class);
         CriteriaBuilder cb = this.entityManager.getCriteriaBuilder();
@@ -127,5 +130,32 @@ public class AccountsRepository {
         query.where(cb.equal(cb.lower(tenantRoot.get("name")), name.toLowerCase()));
         Tenant tenant = entityManager.createQuery(query).getSingleResult();
         return tenant != null ? tenant.getId().toString() : null;
+    }
+
+    public Page<UserCreationResponse> getUsersByTenantId(UUID tenantId, int page, int size, String searchValue) {
+        CriteriaBuilder cb = this.entityManager.getCriteriaBuilder();
+        CriteriaQuery<User> query = cb.createQuery(User.class);
+        Root<User> userRoot = query.from(User.class);
+        if(!searchValue.trim().isEmpty()) {
+            query.where(
+                    cb.and(
+                            cb.equal(userRoot.get("tenant").get("id"), tenantId),
+                            cb.or(
+                                    cb.like(cb.lower(userRoot.get("username")), "%" + searchValue.toLowerCase() + "%"),
+                                    cb.like(cb.lower(userRoot.get("email")), "%" + searchValue.toLowerCase() + "%"),
+                                    cb.like(cb.lower(userRoot.get("firstName")), "%" + searchValue.toLowerCase() + "%"),
+                                    cb.like(cb.lower(userRoot.get("lastName")), "%" + searchValue.toLowerCase() + "%")
+                            )
+                    )
+            );
+        }
+        List<User> users = entityManager.createQuery(query)
+                .setFirstResult(page * size)
+                .setMaxResults(size)
+                .getResultList();
+        List<UserCreationResponse> responses = users.stream()
+                .map(UserCreationResponse::getUserResponse)
+                .toList();
+        return new PageImpl<>(responses);
     }
 }

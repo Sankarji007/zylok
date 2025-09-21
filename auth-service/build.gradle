@@ -1,12 +1,16 @@
-plugins {
-    id 'java'
-}
+// Authentication service module - handles OAuth2, JWT, and user management
 
 dependencies {
+    // Inter-module dependencies
+    api project(':common')
+    
+    // Authentication and authorization
+    api 'org.springframework.boot:spring-boot-starter-oauth2-resource-server'
+    api 'org.keycloak:keycloak-spring-boot-starter:24.0.3'
     implementation 'org.keycloak:keycloak-admin-client:22.0.1'
-    implementation project(':common')
-    implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+    
+    // Redis for session management
+    api 'org.springframework.boot:spring-boot-starter-data-redis'
     implementation 'io.lettuce:lettuce-core:6.4.1.RELEASE'
-    implementation 'org.springframework.boot:spring-boot-starter-oauth2-resource-server'
 }
 

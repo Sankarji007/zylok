@@ -1,0 +1,41 @@
+plugins {
+    id 'base'
+}
+
+// Task to install npm dependencies
+task npmInstall(type: Exec) {
+    description = 'Install npm dependencies'
+    group = 'build'
+    workingDir = projectDir
+    commandLine 'npm', 'install'
+}
+
+// Task to build the React application
+task npmBuild(type: Exec) {
+    description = 'Build the React application'
+    group = 'build'
+    dependsOn npmInstall
+    workingDir = projectDir
+    commandLine 'npm', 'run', 'build'
+}
+
+// Task to run the development server
+task npmDev(type: Exec) {
+    description = 'Run the development server'
+    group = 'application'
+    dependsOn npmInstall
+    workingDir = projectDir
+    commandLine 'npm', 'run', 'dev'
+}
+
+// Make build task depend on npm build
+build.dependsOn npmBuild
+
+// Clean task to remove node_modules and build artifacts
+task npmClean(type: Delete) {
+    description = 'Clean npm build artifacts'
+    group = 'build'
+    delete 'node_modules', 'dist'
+}
+
+clean.dependsOn npmClean

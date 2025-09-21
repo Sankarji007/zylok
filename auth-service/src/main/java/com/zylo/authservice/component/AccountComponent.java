@@ -36,9 +36,9 @@ public class AccountComponent {
         this.keycloak = KeycloakBuilder.builder()
                 .serverUrl(serverUrl)
                 .realm(realm)
-                .grantType(OAuth2Constants.CLIENT_CREDENTIALS)
                 .clientId(adminClientId)
-                .clientSecret(adminPassword)
+                .username(adminUsername)
+                .password(adminPassword)
                 .build();
 
     }

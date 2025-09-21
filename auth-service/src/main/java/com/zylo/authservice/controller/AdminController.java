@@ -5,6 +5,7 @@ import com.zylo.authservice.dto.UserCreationResponse;
 import com.zylo.authservice.dto.UserRegistrationRequest;
 import com.zylo.authservice.service.AdminService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -15,8 +16,6 @@ import java.net.URISyntaxException;
 @RestController
 @RequestMapping("/api/v1/accounts")
 public class AdminController {
-
-
 
     @Autowired
     private AdminService adminService;
@@ -34,12 +33,6 @@ public class AdminController {
         UserCreationResponse userCreationResponse = adminService.registerInvitedUser(request);
         URI uri=new URI("/api/v1/accounts/"+userCreationResponse.getId());
         return ResponseEntity.created(uri).build();
-    }
-
-    @GetMapping("/{Id}")
-    public ResponseEntity<UserCreationResponse> getUserById(@PathVariable String Id) {
-        UserCreationResponse userCreationResponse = adminService.getUserById(Id);
-        return ResponseEntity.ok(userCreationResponse);
     }
 
 

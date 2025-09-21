@@ -9,9 +9,16 @@ import java.util.TimeZone;
 
 @SpringBootApplication
 @EnableJpaAuditing
+@ComponentScan(basePackages = {
+    "com.zylo",
+    "com.zylo.authservice",
+    "com.zylo.chatservice", 
+    "com.zylo.common",
+    "com.zylo.notificationservice",
+    "com.zylo.presenceservice"
+})
 public class ZyloApplication {
     public static void main(String[] args) {
-        TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
         SpringApplication.run(ZyloApplication.class, args);
     }
 }

@@ -10,6 +10,7 @@ import org.springframework.security.config.annotation.web.configurers.AbstractHt
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.AuthenticationFilter;
+import org.springframework.web.cors.CorsConfigurationSource;
 
 @Configuration
 @EnableWebSecurity
@@ -23,11 +24,16 @@ public class SecurityConfig {
     @Autowired
     JwtAuthConverter authConverter;
 
+    @Autowired
+    CorsConfigurationSource corsConfigurationSource;
+
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
+                .cors(cors -> cors.configurationSource(corsConfigurationSource)) // Enable CORS
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/v1/accounts/register").permitAll() // Public endpoint
+                        .requestMatchers("/ws/**").permitAll() // Allow WebSocket endpoints
                         .anyRequest().authenticated() // All other endpoints require authentication
                 )
                 .addFilterAfter(tenantFilter, AuthenticationFilter.class)

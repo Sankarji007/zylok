@@ -48,9 +48,6 @@ public class JwtAuthConverter implements Converter<Jwt, AbstractAuthenticationTo
             }
         }
 
-        // Debugging extracted roles
-        System.out.println("Extracted roles: " + roles);
-
         return roles.stream()
                 .map(role -> new SimpleGrantedAuthority("ROLE_" + role.toUpperCase()))
                 .collect(Collectors.toSet());

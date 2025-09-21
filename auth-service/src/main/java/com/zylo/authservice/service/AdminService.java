@@ -10,6 +10,7 @@ import com.zylo.authservice.exception.ResourceNotFoundException;
 import com.zylo.authservice.repository.AccountsRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -63,12 +64,6 @@ public class AdminService {
         return getUser(request, USER, tenantByUser);
     }
 
-    public UserCreationResponse getUserById(String id) {
-        User userById = accountsRepository.getUserById(id);
-        if (userById != null) {
-            return UserCreationResponse.getUserResponse(userById);
-        } else {
-            throw new ResourceNotFoundException(id);
-        }
-    }
+
+
 }
